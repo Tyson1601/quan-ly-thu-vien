@@ -16,7 +16,7 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
 
         JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Sách", new JPanel());
+        tabs.addTab("Sách", new SachPanel(ql));
         tabs.addTab("Độc giả", new JPanel());
         tabs.addTab("Mượn/Trả", new JPanel());
         tabs.addTab("Thống kê", taoTabThongKe());
