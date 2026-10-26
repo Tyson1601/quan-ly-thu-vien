@@ -15,11 +15,23 @@ public class MainFrame extends JFrame {
         setSize(900, 600);
         setLocationRelativeTo(null);
 
+        SachPanel sachPanel = new SachPanel(ql);
+        DocGiaPanel docGiaPanel = new DocGiaPanel(ql);
+        MuonTraPanel muonTraPanel = new MuonTraPanel(ql);
+
         JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Sách", new SachPanel(ql));
-        tabs.addTab("Độc giả", new DocGiaPanel(ql));
-        tabs.addTab("Mượn/Trả", new JPanel());
+        tabs.addTab("Sách", sachPanel);
+        tabs.addTab("Độc giả", docGiaPanel);
+        tabs.addTab("Mượn/Trả", muonTraPanel);
         tabs.addTab("Thống kê", taoTabThongKe());
+
+        // Dữ liệu dùng chung nên mỗi lần chuyển tab thì nạp lại tab đó
+        tabs.addChangeListener(e -> {
+            Component tab = tabs.getSelectedComponent();
+            if (tab == sachPanel) sachPanel.napLai();
+            else if (tab == docGiaPanel) docGiaPanel.napLai();
+            else if (tab == muonTraPanel) muonTraPanel.napLai();
+        });
         add(tabs, BorderLayout.CENTER);
     }
 
