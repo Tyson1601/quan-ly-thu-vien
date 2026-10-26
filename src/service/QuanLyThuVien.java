@@ -4,6 +4,7 @@ import exception.*;
 import model.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class QuanLyThuVien {
@@ -13,18 +14,27 @@ public class QuanLyThuVien {
 
     // ===== SÁCH =====
     public void them(Sach s) throws TrungMaException {
+        if (s == null) throw new IllegalArgumentException("Sách không hợp lệ");
+        kiemTraMaTen(s.getMa(), s.getTen());
+        kiemTraSoLuong(s.getSoLuong());
         if (timSachTheoMa(s.getMa()) != null) throw new TrungMaException(s.getMa());
         dsSach.add(s);
     }
 
     public void sua(String ma, String tenMoi, int soLuongMoi) throws KhongTimThayException {
+        kiemTraMaTen(ma, tenMoi);
+        kiemTraSoLuong(soLuongMoi);
         Sach s = laySach(ma);
         s.setTen(tenMoi);
         s.setSoLuong(soLuongMoi);
     }
 
-    public void xoa(String ma) throws KhongTimThayException {
-        dsSach.remove(laySach(ma));
+    public void xoa(String ma) throws KhongTimThayException, SachDangMuonException {
+        Sach s = laySach(ma);
+        boolean dangMuon = dsPhieu.stream()
+                .anyMatch(p -> p.getSach() == s && !p.daTra());
+        if (dangMuon) throw new SachDangMuonException(s.getTen());
+        dsSach.remove(s);
     }
 
     public List<Sach> layTatCa() { return new ArrayList<>(dsSach); }
@@ -38,6 +48,8 @@ public class QuanLyThuVien {
 
     // ===== ĐỘC GIẢ =====
     public void themDocGia(DocGia d) throws TrungMaException {
+        if (d == null) throw new IllegalArgumentException("Độc giả không hợp lệ");
+        kiemTraMaTen(d.getMa(), d.getTen());
         if (timDocGiaTheoMa(d.getMa()) != null) throw new TrungMaException(d.getMa());
         dsDocGia.add(d);
     }
@@ -67,6 +79,35 @@ public class QuanLyThuVien {
     }
 
     public List<PhieuMuon> layTatCaPhieu() { return new ArrayList<>(dsPhieu); }
+
+    // ===== THỐNG KÊ =====
+    public int tongSoSachConLai() {
+        return dsSach.stream().mapToInt(Sach::getSoLuong).sum();
+    }
+
+    public List<PhieuMuon> layPhieuChuaTra() {
+        return dsPhieu.stream().filter(p -> !p.daTra()).collect(Collectors.toList());
+    }
+
+    /** Sách có nhiều phiếu mượn nhất, null nếu chưa ai mượn. */
+    public Sach sachMuonNhieuNhat() {
+        return dsPhieu.stream()
+                .collect(Collectors.groupingBy(PhieuMuon::getSach, Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
+
+    // ===== KIỂM TRA DỮ LIỆU =====
+    private void kiemTraMaTen(String ma, String ten) {
+        if (ma == null || ma.isBlank()) throw new IllegalArgumentException("Mã không được để trống");
+        if (ten == null || ten.isBlank()) throw new IllegalArgumentException("Tên không được để trống");
+    }
+
+    private void kiemTraSoLuong(int soLuong) {
+        if (soLuong < 0) throw new IllegalArgumentException("Số lượng không được âm");
+    }
 
     // ===== HÀM DÙNG CHUNG (private) =====
     private Sach timSachTheoMa(String ma) {
