@@ -17,7 +17,7 @@ public class MainFrame extends JFrame {
 
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("Sách", new SachPanel(ql));
-        tabs.addTab("Độc giả", new JPanel());
+        tabs.addTab("Độc giả", new DocGiaPanel(ql));
         tabs.addTab("Mượn/Trả", new JPanel());
         tabs.addTab("Thống kê", taoTabThongKe());
         add(tabs, BorderLayout.CENTER);
