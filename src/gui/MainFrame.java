@@ -18,12 +18,13 @@ public class MainFrame extends JFrame {
         SachPanel sachPanel = new SachPanel(ql);
         DocGiaPanel docGiaPanel = new DocGiaPanel(ql);
         MuonTraPanel muonTraPanel = new MuonTraPanel(ql);
+        ThongKePanel thongKePanel = new ThongKePanel(ql);
 
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("Sách", sachPanel);
         tabs.addTab("Độc giả", docGiaPanel);
         tabs.addTab("Mượn/Trả", muonTraPanel);
-        tabs.addTab("Thống kê", taoTabThongKe());
+        tabs.addTab("Thống kê", thongKePanel);
 
         // Dữ liệu dùng chung nên mỗi lần chuyển tab thì nạp lại tab đó
         tabs.addChangeListener(e -> {
@@ -31,14 +32,8 @@ public class MainFrame extends JFrame {
             if (tab == sachPanel) sachPanel.napLai();
             else if (tab == docGiaPanel) docGiaPanel.napLai();
             else if (tab == muonTraPanel) muonTraPanel.napLai();
+            else if (tab == thongKePanel) thongKePanel.napLai();
         });
         add(tabs, BorderLayout.CENTER);
-    }
-
-    // Tab Thống kê: làm sau, chờ thêm hàm vào service
-    private JPanel taoTabThongKe() {
-        JPanel p = new JPanel(new GridBagLayout());
-        p.add(new JLabel("Chức năng thống kê sẽ được bổ sung sau."));
-        return p;
     }
 }
