@@ -21,6 +21,16 @@ public class SachPanel extends JPanel {
     private final JTextField txtTim = new JTextField(20);
     private final JComboBox<String> cboLoai = new JComboBox<>(CAC_LOAI);
 
+    // Hai chế độ hiển thị: danh sách (bảng) và ảnh bìa (lưới)
+    private static final String CHE_DO_BANG = "bang";
+    private static final String CHE_DO_BIA = "bia";
+    private final CardLayout cardLayout = new CardLayout();
+    private final JPanel khuVuc = new JPanel(cardLayout);
+    private final DefaultListModel<Sach> modelBia = new DefaultListModel<>();
+    private final JList<Sach> listBia = new JList<>(modelBia);
+    private final JRadioButton rdoBang = new JRadioButton("Danh sách", true);
+    private final JRadioButton rdoBia = new JRadioButton("Ảnh bìa");
+
     /** laAdmin = false thì ẩn các nút Thêm/Sửa/Xóa. */
     public SachPanel(QuanLyThuVien ql, boolean laAdmin) {
         this.ql = ql;
@@ -35,6 +45,13 @@ public class SachPanel extends JPanel {
         top.add(new JLabel("Loại:"));
         top.add(cboLoai);
         top.add(btnTim);
+        top.add(Box.createHorizontalStrut(16));
+        top.add(new JLabel("Hiển thị:"));
+        ButtonGroup nhom = new ButtonGroup();
+        nhom.add(rdoBang);
+        nhom.add(rdoBia);
+        top.add(rdoBang);
+        top.add(rdoBia);
         add(top, BorderLayout.NORTH);
 
         // Bảng
@@ -47,7 +64,18 @@ public class SachPanel extends JPanel {
         table = new JTable(model);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoCreateRowSorter(true);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+
+        // Lưới ảnh bìa: JList xếp ngang, tự xuống dòng theo bề rộng cửa sổ
+        listBia.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listBia.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        listBia.setVisibleRowCount(-1);
+        listBia.setFixedCellWidth(AnhBia.RONG + 30);
+        listBia.setFixedCellHeight(AnhBia.CAO + 66);
+        listBia.setCellRenderer(new BiaRenderer());
+
+        khuVuc.add(new JScrollPane(table), CHE_DO_BANG);
+        khuVuc.add(new JScrollPane(listBia), CHE_DO_BIA);
+        add(khuVuc, BorderLayout.CENTER);
 
         // Nút thao tác (chỉ admin)
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -58,6 +86,12 @@ public class SachPanel extends JPanel {
             bottom.add(btnThem);
             bottom.add(btnSua);
             bottom.add(btnXoa);
+            JButton btnAnh = new JButton("Đặt ảnh bìa");
+            JButton btnGoAnh = new JButton("Gỡ ảnh bìa");
+            bottom.add(btnAnh);
+            bottom.add(btnGoAnh);
+            btnAnh.addActionListener(e -> datAnhBia());
+            btnGoAnh.addActionListener(e -> goAnhBia());
             JButton btnNhapCsv = new JButton("Nhập từ CSV");
             bottom.add(btnNhapCsv);
             btnNhapCsv.addActionListener(e -> nhapCsv());
@@ -69,6 +103,8 @@ public class SachPanel extends JPanel {
         }
         add(bottom, BorderLayout.SOUTH);
 
+        rdoBang.addActionListener(e -> doiCheDo());
+        rdoBia.addActionListener(e -> doiCheDo());
         btnTim.addActionListener(e -> loc());
         txtTim.addActionListener(e -> loc());
         cboLoai.addActionListener(e -> loc());
@@ -97,12 +133,104 @@ public class SachPanel extends JPanel {
 
     private void hienThi(List<Sach> ds) {
         model.setRowCount(0);
+        modelBia.clear();
         for (Sach s : ds) {
             model.addRow(new Object[]{s.getMa(), s.getTen(), s.getLoai(), s.getSoLuong()});
+            modelBia.addElement(s);
+        }
+    }
+
+    private void doiCheDo() {
+        cardLayout.show(khuVuc, rdoBia.isSelected() ? CHE_DO_BIA : CHE_DO_BANG);
+    }
+
+    /** Mỗi ô trong lưới: ảnh bìa, tên sách (tối đa 2 dòng) và số lượng còn. */
+    private static class BiaRenderer extends JPanel implements ListCellRenderer<Sach> {
+        private final JLabel lblAnh = new JLabel();
+        private final JLabel lblTen = new JLabel("", SwingConstants.CENTER);
+        private final JLabel lblSl = new JLabel("", SwingConstants.CENTER);
+
+        BiaRenderer() {
+            super(new BorderLayout(0, 4));
+            setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+            lblAnh.setHorizontalAlignment(SwingConstants.CENTER);
+            lblSl.setFont(lblSl.getFont().deriveFont(Font.PLAIN, 11f));
+            JPanel chu = new JPanel(new BorderLayout());
+            chu.setOpaque(false);
+            chu.add(lblTen, BorderLayout.CENTER);
+            chu.add(lblSl, BorderLayout.SOUTH);
+            add(lblAnh, BorderLayout.NORTH);
+            add(chu, BorderLayout.CENTER);
+        }
+
+        @Override
+        public Component getListCellRendererComponent(JList<? extends Sach> list, Sach s, int index,
+                                                      boolean chon, boolean focus) {
+            lblAnh.setIcon(AnhBia.lay(s));
+            // HTML để tên dài tự xuống dòng; chiều cao ô cố định nên tên quá dài sẽ bị cắt
+            lblTen.setText("<html><div style='text-align:center;width:" + (AnhBia.RONG - 22) + "px'>"
+                    + escape(s.getTen()) + "</div></html>");
+            lblSl.setText(s.getMa() + "  |  còn " + s.getSoLuong());
+            lblSl.setForeground(s.getSoLuong() <= 0 ? new Color(176, 0, 32) : Color.GRAY);
+            setBackground(chon ? list.getSelectionBackground() : list.getBackground());
+            lblTen.setForeground(chon ? list.getSelectionForeground() : list.getForeground());
+            setOpaque(true);
+            return this;
+        }
+
+        private static String escape(String t) {
+            return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        }
+    }
+
+    private void datAnhBia() {
+        String ma = maDangChon();
+        if (ma == null) return;
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Chọn ảnh bìa cho sách " + ma);
+        fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Ảnh (png, jpg, gif)", "png", "jpg", "jpeg", "gif"));
+        if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        try {
+            AnhBia.datAnh(ma, fc.getSelectedFile());
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+        capNhatHienThi();
+    }
+
+    private void goAnhBia() {
+        String ma = maDangChon();
+        if (ma == null) return;
+        if (!AnhBia.coAnhThat(ma)) {
+            JOptionPane.showMessageDialog(this, "Sách này đang dùng bìa mặc định");
+            return;
+        }
+        AnhBia.xoaAnh(ma);
+        capNhatHienThi();
+    }
+
+    /** Vẽ lại danh sách nhưng giữ nguyên ô tìm kiếm / bộ lọc / sách đang chọn. */
+    private void capNhatHienThi() {
+        String ma = null;
+        Sach chon = listBia.getSelectedValue();
+        if (chon != null) ma = chon.getMa();
+        loc();
+        if (ma != null) {
+            for (int i = 0; i < modelBia.size(); i++) {
+                if (modelBia.get(i).getMa().equals(ma)) { listBia.setSelectedIndex(i); break; }
+            }
         }
     }
 
     private String maDangChon() {
+        if (rdoBia.isSelected()) {   // đang xem ảnh bìa thì lấy sách chọn trong lưới
+            Sach s = listBia.getSelectedValue();
+            if (s == null) {
+                JOptionPane.showMessageDialog(this, "Hãy chọn một cuốn sách");
+                return null;
+            }
+            return s.getMa();
+        }
         int row = table.getSelectedRow();
         if (row < 0) {
             JOptionPane.showMessageDialog(this, "Hãy chọn một dòng");
