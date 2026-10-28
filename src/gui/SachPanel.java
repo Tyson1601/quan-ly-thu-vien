@@ -1,11 +1,13 @@
 package gui;
 
 import model.Sach;
+import service.NhapSachCsv;
 import service.QuanLyThuVien;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,6 +58,9 @@ public class SachPanel extends JPanel {
             bottom.add(btnThem);
             bottom.add(btnSua);
             bottom.add(btnXoa);
+            JButton btnNhapCsv = new JButton("Nhập từ CSV");
+            bottom.add(btnNhapCsv);
+            btnNhapCsv.addActionListener(e -> nhapCsv());
             btnThem.addActionListener(e -> them());
             btnSua.addActionListener(e -> sua());
             btnXoa.addActionListener(e -> xoa());
@@ -136,6 +141,30 @@ public class SachPanel extends JPanel {
             ql.xoa(ma);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+        napLai();
+    }
+
+    /** Chọn file CSV rồi thêm hàng loạt sách (cột: Mã, Tên, Loại, Số lượng, Thông tin thêm). */
+    private void nhapCsv() {
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Chọn file CSV danh sách sách");
+        fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("File CSV (*.csv)", "csv"));
+        if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        File f = fc.getSelectedFile();
+        try {
+            NhapSachCsv.KetQua kq = NhapSachCsv.nhap(ql, f.getAbsolutePath());
+            if (kq.soThem > 0) {
+                try {
+                    ql.luuFile();   // lưu luôn để không mất nếu chương trình tắt đột ngột
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Đã nhập nhưng chưa lưu được vào file: " + ex.getMessage());
+                }
+            }
+            JOptionPane.showMessageDialog(this, kq.tomTat(), "Kết quả nhập CSV",
+                    kq.loi.isEmpty() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Không đọc được file: " + ex.getMessage());
         }
         napLai();
     }
