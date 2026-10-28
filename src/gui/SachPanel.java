@@ -6,24 +6,32 @@ import service.QuanLyThuVien;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SachPanel extends JPanel {
+    private static final String TAT_CA = "Tất cả loại";
+    private static final String[] CAC_LOAI = {TAT_CA, "Truyện tranh", "Giáo trình", "Tạp chí"};
+
     private final QuanLyThuVien ql;
     private final DefaultTableModel model;
     private final JTable table;
     private final JTextField txtTim = new JTextField(20);
+    private final JComboBox<String> cboLoai = new JComboBox<>(CAC_LOAI);
 
-    public SachPanel(QuanLyThuVien ql) {
+    /** laAdmin = false thì ẩn các nút Thêm/Sửa/Xóa. */
+    public SachPanel(QuanLyThuVien ql, boolean laAdmin) {
         this.ql = ql;
         setLayout(new BorderLayout(8, 8));
         setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
-        // Thanh tìm kiếm
+        // Thanh tìm kiếm + lọc theo loại
         JButton btnTim = new JButton("Tìm");
         JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
         top.add(new JLabel("Tìm theo tên:"));
         top.add(txtTim);
+        top.add(new JLabel("Loại:"));
+        top.add(cboLoai);
         top.add(btnTim);
         add(top, BorderLayout.NORTH);
 
@@ -31,7 +39,7 @@ public class SachPanel extends JPanel {
         model = new DefaultTableModel(new String[]{"Mã", "Tên", "Loại", "Số lượng"}, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
             @Override public Class<?> getColumnClass(int col) {
-                return col == 3 ? Integer.class : String.class; // để sắp xếp số đúng thứ tự
+                return col == 3 ? Integer.class : String.class;
             }
         };
         table = new JTable(model);
@@ -39,29 +47,47 @@ public class SachPanel extends JPanel {
         table.setAutoCreateRowSorter(true);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // Nút thao tác
-        JButton btnThem = new JButton("Thêm");
-        JButton btnSua = new JButton("Sửa");
-        JButton btnXoa = new JButton("Xóa");
+        // Nút thao tác (chỉ admin)
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        bottom.add(btnThem);
-        bottom.add(btnSua);
-        bottom.add(btnXoa);
+        if (laAdmin) {
+            JButton btnThem = new JButton("Thêm");
+            JButton btnSua = new JButton("Sửa");
+            JButton btnXoa = new JButton("Xóa");
+            bottom.add(btnThem);
+            bottom.add(btnSua);
+            bottom.add(btnXoa);
+            btnThem.addActionListener(e -> them());
+            btnSua.addActionListener(e -> sua());
+            btnXoa.addActionListener(e -> xoa());
+        } else {
+            bottom.add(new JLabel("Tài khoản người dùng: chỉ được xem, tìm kiếm và lọc sách."));
+        }
         add(bottom, BorderLayout.SOUTH);
 
-        btnTim.addActionListener(e -> tim());
-        txtTim.addActionListener(e -> tim());
-        btnThem.addActionListener(e -> them());
-        btnSua.addActionListener(e -> sua());
-        btnXoa.addActionListener(e -> xoa());
+        btnTim.addActionListener(e -> loc());
+        txtTim.addActionListener(e -> loc());
+        cboLoai.addActionListener(e -> loc());
 
         napLai();
     }
 
-    /** Nạp lại bảng từ ql.layTatCa() (và xóa ô tìm kiếm cho khớp với nội dung bảng). */
+    /** Nạp lại bảng từ service, xóa ô tìm kiếm và bộ lọc. */
     public void napLai() {
         txtTim.setText("");
-        hienThi(ql.layTatCa());
+        cboLoai.setSelectedIndex(0);
+        loc();
+    }
+
+    /** Kết hợp ô tìm theo tên và lọc theo loại (logic nằm trong service). */
+    private void loc() {
+        String tuKhoa = txtTim.getText().trim();
+        String loai = (String) cboLoai.getSelectedItem();
+
+        List<Sach> ds = new ArrayList<>(tuKhoa.isEmpty() ? ql.layTatCa() : ql.tim(tuKhoa));
+        if (loai != null && !TAT_CA.equals(loai)) {
+            ds.retainAll(ql.locTheoLoai(loai));
+        }
+        hienThi(ds);
     }
 
     private void hienThi(List<Sach> ds) {
@@ -71,19 +97,13 @@ public class SachPanel extends JPanel {
         }
     }
 
-    private void tim() {
-        String tuKhoa = txtTim.getText().trim();
-        hienThi(tuKhoa.isEmpty() ? ql.layTatCa() : ql.tim(tuKhoa));
-    }
-
-    /** Trả về mã sách của dòng đang chọn, hoặc null nếu chưa chọn (đã báo lỗi). */
     private String maDangChon() {
         int row = table.getSelectedRow();
         if (row < 0) {
             JOptionPane.showMessageDialog(this, "Hãy chọn một dòng");
             return null;
         }
-        return (String) table.getValueAt(row, 0); // getValueAt dùng chỉ số view nên đúng cả khi đã sắp xếp
+        return (String) table.getValueAt(row, 0);
     }
 
     private void them() {
@@ -98,7 +118,7 @@ public class SachPanel extends JPanel {
         for (Sach s : ql.layTatCa()) {
             if (s.getMa().equals(ma)) { can = s; break; }
         }
-        if (can == null) { // bảng đã cũ so với dữ liệu
+        if (can == null) {
             napLai();
             return;
         }
@@ -114,7 +134,7 @@ public class SachPanel extends JPanel {
         if (xacNhan != JOptionPane.YES_OPTION) return;
         try {
             ql.xoa(ma);
-        } catch (Exception ex) { // Exception: sau này service sẽ thêm SachDangMuonException
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage());
         }
         napLai();

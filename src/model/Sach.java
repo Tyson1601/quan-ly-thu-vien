@@ -1,6 +1,9 @@
 package model;
 
-public abstract class Sach {
+import java.io.Serializable;
+
+public abstract class Sach implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String ma;
     private String ten;
     private int soLuong;
