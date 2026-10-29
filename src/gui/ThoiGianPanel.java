@@ -29,33 +29,39 @@ public class ThoiGianPanel extends JPanel {
     public ThoiGianPanel(QuanLyThuVien ql, Runnable khiDoiNgay) {
         this.ql = ql;
         this.khiDoiNgay = khiDoiNgay;
-        setLayout(new BorderLayout(8, 8));
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        setLayout(new BorderLayout(12, 12));
+        setBackground(UIStyle.BG_MAIN);
+        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         // Phần trên: ngày hiện tại + các nút chỉnh
-        lblNgayHeThong.setFont(lblNgayHeThong.getFont().deriveFont(Font.BOLD, 20f));
+        lblNgayHeThong.setFont(UIStyle.FONT_TITLE);
+        lblNgayHeThong.setForeground(UIStyle.TEXT_DARK);
         lblGhiChu.setFont(lblGhiChu.getFont().deriveFont(Font.ITALIC));
+        lblGhiChu.setForeground(UIStyle.TEXT_MUTED);
 
-        JButton btnDat = new JButton("Đặt ngày");
-        JButton btn1 = new JButton("+1 ngày");
-        JButton btn7 = new JButton("+7 ngày");
-        JButton btn14 = new JButton("+14 ngày");
-        JButton btn30 = new JButton("+30 ngày");
-        JButton btnThat = new JButton("Về ngày thật");
+        UIStyle.styleTextField(txtNgay);
+        JButton btnDat = UIStyle.createButton("Đặt ngày", UIStyle.PRIMARY);
+        JButton btn1 = UIStyle.createButton("+1 ngày", new Color(100, 116, 139));
+        JButton btn7 = UIStyle.createButton("+7 ngày", new Color(100, 116, 139));
+        JButton btn14 = UIStyle.createButton("+14 ngày", new Color(100, 116, 139));
+        JButton btn30 = UIStyle.createButton("+30 ngày", new Color(100, 116, 139));
+        JButton btnThat = UIStyle.createButton("Về ngày thật", UIStyle.SUCCESS);
 
-        JPanel dieuKhien = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel dieuKhien = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
+        dieuKhien.setOpaque(false);
         dieuKhien.add(new JLabel("Đặt ngày (dd/MM/yyyy):"));
         dieuKhien.add(txtNgay);
         dieuKhien.add(btnDat);
-        dieuKhien.add(Box.createHorizontalStrut(16));
+        dieuKhien.add(Box.createHorizontalStrut(10));
         dieuKhien.add(btn1);
         dieuKhien.add(btn7);
         dieuKhien.add(btn14);
         dieuKhien.add(btn30);
-        dieuKhien.add(Box.createHorizontalStrut(16));
+        dieuKhien.add(Box.createHorizontalStrut(10));
         dieuKhien.add(btnThat);
 
-        JPanel tren = new JPanel(new GridLayout(0, 1, 2, 2));
+        JPanel tren = new JPanel(new GridLayout(0, 1, 4, 4));
+        tren.setOpaque(false);
         tren.add(lblNgayHeThong);
         tren.add(lblGhiChu);
         tren.add(dieuKhien);
@@ -71,12 +77,15 @@ public class ThoiGianPanel extends JPanel {
         };
         JTable table = new JTable(model);
         table.setAutoCreateRowSorter(true);
+        UIStyle.styleTable(table);
+
         JScrollPane sp = new JScrollPane(table);
         sp.setBorder(BorderFactory.createTitledBorder("Phiếu quá hạn tại ngày hệ thống"));
         add(sp, BorderLayout.CENTER);
 
         // Dưới: tổng tiền phạt
-        lblTongPhat.setFont(lblTongPhat.getFont().deriveFont(Font.BOLD, 14f));
+        lblTongPhat.setFont(UIStyle.FONT_BOLD);
+        lblTongPhat.setForeground(UIStyle.DANGER);
         add(lblTongPhat, BorderLayout.SOUTH);
 
         btnDat.addActionListener(e -> datNgay());

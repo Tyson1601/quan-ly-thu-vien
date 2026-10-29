@@ -34,12 +34,15 @@ public class SachPanel extends JPanel {
     /** laAdmin = false thì ẩn các nút Thêm/Sửa/Xóa. */
     public SachPanel(QuanLyThuVien ql, boolean laAdmin) {
         this.ql = ql;
-        setLayout(new BorderLayout(8, 8));
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        setLayout(new BorderLayout(12, 12));
+        setBackground(UIStyle.BG_MAIN);
+        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         // Thanh tìm kiếm + lọc theo loại
-        JButton btnTim = new JButton("Tìm");
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        UIStyle.styleTextField(txtTim);
+        JButton btnTim = UIStyle.createButton("Tìm kiếm", UIStyle.PRIMARY);
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        top.setOpaque(false);
         top.add(new JLabel("Tìm theo tên:"));
         top.add(txtTim);
         top.add(new JLabel("Loại:"));
@@ -50,6 +53,8 @@ public class SachPanel extends JPanel {
         ButtonGroup nhom = new ButtonGroup();
         nhom.add(rdoBang);
         nhom.add(rdoBia);
+        rdoBang.setOpaque(false);
+        rdoBia.setOpaque(false);
         top.add(rdoBang);
         top.add(rdoBia);
         add(top, BorderLayout.NORTH);
@@ -65,6 +70,9 @@ public class SachPanel extends JPanel {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoCreateRowSorter(true);
 
+        UIStyle.styleTable(table);
+        UIStyle.setBadgeRenderer(table, 2);
+
         // Lưới ảnh bìa: JList xếp ngang, tự xuống dòng theo bề rộng cửa sổ
         listBia.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listBia.setLayoutOrientation(JList.HORIZONTAL_WRAP);
@@ -73,33 +81,38 @@ public class SachPanel extends JPanel {
         listBia.setFixedCellHeight(AnhBia.CAO + 66);
         listBia.setCellRenderer(new BiaRenderer());
 
+        khuVuc.setOpaque(false);
         khuVuc.add(new JScrollPane(table), CHE_DO_BANG);
         khuVuc.add(new JScrollPane(listBia), CHE_DO_BIA);
         add(khuVuc, BorderLayout.CENTER);
 
         // Nút thao tác (chỉ admin)
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
+        bottom.setOpaque(false);
         if (laAdmin) {
-            JButton btnThem = new JButton("Thêm");
-            JButton btnSua = new JButton("Sửa");
-            JButton btnXoa = new JButton("Xóa");
+            JButton btnThem = UIStyle.createButton("Thêm mới", UIStyle.PRIMARY);
+            JButton btnSua = UIStyle.createButton("Cập nhật", UIStyle.WARNING);
+            JButton btnXoa = UIStyle.createButton("Xóa", UIStyle.DANGER);
             bottom.add(btnThem);
             bottom.add(btnSua);
             bottom.add(btnXoa);
-            JButton btnAnh = new JButton("Đặt ảnh bìa");
-            JButton btnGoAnh = new JButton("Gỡ ảnh bìa");
+            JButton btnAnh = UIStyle.createButton("Đặt ảnh bìa", new Color(14, 165, 233));
+            JButton btnGoAnh = UIStyle.createButton("Gỡ ảnh bìa", new Color(100, 116, 139));
             bottom.add(btnAnh);
             bottom.add(btnGoAnh);
             btnAnh.addActionListener(e -> datAnhBia());
             btnGoAnh.addActionListener(e -> goAnhBia());
-            JButton btnNhapCsv = new JButton("Nhập từ CSV");
+            JButton btnNhapCsv = UIStyle.createButton("Nhập CSV", UIStyle.SUCCESS);
             bottom.add(btnNhapCsv);
             btnNhapCsv.addActionListener(e -> nhapCsv());
             btnThem.addActionListener(e -> them());
             btnSua.addActionListener(e -> sua());
             btnXoa.addActionListener(e -> xoa());
         } else {
-            bottom.add(new JLabel("Tài khoản người dùng: chỉ được xem, tìm kiếm và lọc sách."));
+            JLabel lblNote = new JLabel("Tài khoản người dùng: chỉ được xem, tìm kiếm và lọc sách.");
+            lblNote.setFont(UIStyle.FONT_BODY);
+            lblNote.setForeground(UIStyle.TEXT_MUTED);
+            bottom.add(lblNote);
         }
         add(bottom, BorderLayout.SOUTH);
 

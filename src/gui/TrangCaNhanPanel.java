@@ -29,11 +29,13 @@ public class TrangCaNhanPanel extends JPanel {
         this.ql = ql;
         this.taiKhoan = taiKhoan;
         this.khiDoiThongTin = khiDoiThongTin;
-        setLayout(new BorderLayout(8, 8));
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        setLayout(new BorderLayout(12, 12));
+        setBackground(UIStyle.BG_MAIN);
+        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         // Thông tin tài khoản
         JPanel thongTin = new JPanel(new GridBagLayout());
+        thongTin.setOpaque(false);
         thongTin.setBorder(BorderFactory.createTitledBorder("Thông tin tài khoản"));
         dong(thongTin, 0, "Họ và tên:", lblHoTen);
         dong(thongTin, 1, "Mã độc giả:", lblMaDocGia);
@@ -41,13 +43,15 @@ public class TrangCaNhanPanel extends JPanel {
         dong(thongTin, 3, "Số điện thoại:", lblSdt);
         dong(thongTin, 4, "Email:", lblEmail);
 
-        JButton btnCapNhat = new JButton("Cập nhật thông tin");
-        JButton btnDoiMk = new JButton("Đổi mật khẩu");
-        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton btnCapNhat = UIStyle.createButton("Cập nhật thông tin", UIStyle.PRIMARY);
+        JButton btnDoiMk = UIStyle.createButton("Đổi mật khẩu", new Color(100, 116, 139));
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
+        nut.setOpaque(false);
         nut.add(btnCapNhat);
         nut.add(btnDoiMk);
 
         JPanel tren = new JPanel(new BorderLayout());
+        tren.setOpaque(false);
         tren.add(thongTin, BorderLayout.CENTER);
         tren.add(nut, BorderLayout.SOUTH);
         add(tren, BorderLayout.NORTH);
@@ -62,11 +66,15 @@ public class TrangCaNhanPanel extends JPanel {
         };
         JTable table = new JTable(model);
         table.setAutoCreateRowSorter(true);
+        UIStyle.styleTable(table);
+        UIStyle.setBadgeRenderer(table, 6);
+
         JScrollPane sp = new JScrollPane(table);
         sp.setBorder(BorderFactory.createTitledBorder("Lịch sử mượn của tôi"));
         add(sp, BorderLayout.CENTER);
 
-        lblTongKet.setFont(lblTongKet.getFont().deriveFont(Font.BOLD, 13f));
+        lblTongKet.setFont(UIStyle.FONT_BOLD);
+        lblTongKet.setForeground(UIStyle.TEXT_DARK);
         add(lblTongKet, BorderLayout.SOUTH);
 
         btnCapNhat.addActionListener(e -> capNhatThongTin());
@@ -82,11 +90,14 @@ public class TrangCaNhanPanel extends JPanel {
         g.insets = new Insets(3, 8, 3, 8);
         g.gridx = 0;
         JLabel l = new JLabel(nhan);
-        l.setForeground(Color.GRAY);
+        l.setForeground(UIStyle.TEXT_MUTED);
+        l.setFont(UIStyle.FONT_BOLD);
         p.add(l, g);
         g.gridx = 1;
         g.weightx = 1;
         g.fill = GridBagConstraints.HORIZONTAL;
+        giaTri.setFont(UIStyle.FONT_BODY);
+        giaTri.setForeground(UIStyle.TEXT_DARK);
         p.add(giaTri, g);
     }
 
@@ -98,16 +109,24 @@ public class TrangCaNhanPanel extends JPanel {
 
         if (d == null) {
             lblHoTen.setText("(hồ sơ độc giả không còn tồn tại)");
-            lblMaDocGia.setText("-");
-            lblSdt.setText("-");
-            lblTongKet.setText(" ");
+            lblMaDocGia.setText("");
+            lblSdt.setText("");
+            lblTongKet.setText("Bạn chưa liên kết với hồ sơ độc giả nào");
             return;
         }
+
         lblHoTen.setText(d.getTen());
         lblMaDocGia.setText(d.getMa());
-        lblSdt.setText(d.getSdt() == null || d.getSdt().isEmpty() ? "(chưa có)" : d.getSdt());
+        lblSdt.setText(d.getSdt().isEmpty() ? "(chưa có)" : d.getSdt());
 
+        int dangMuon = 0;
+        int quaHan = 0;
         for (PhieuMuon p : ql.layPhieuCuaDocGia(d.getMa())) {
+            boolean daTra = p.daTra();
+            if (!daTra) {
+                dangMuon++;
+                if (p.soNgayTre() > 0) quaHan++;
+            }
             model.addRow(new Object[]{
                     p.getMaPhieu(),
                     p.getSach().getTen(),
@@ -115,49 +134,60 @@ public class TrangCaNhanPanel extends JPanel {
                     p.getHanTra().format(NGAY),
                     p.getNgayTra() == null ? "" : p.getNgayTra().format(NGAY),
                     p.soNgayTre(),
-                    p.daTra() ? "Đã trả" : "Đang mượn",
+                    daTra ? "Đã trả" : (p.soNgayTre() > 0 ? "Quá hạn" : "Đang mượn"),
                     String.format("%,.0f đ", p.tinhTienPhat())
             });
         }
-        lblTongKet.setText(String.format("Đang mượn: %d/%d cuốn     |     Tiền phạt tạm tính (phiếu quá hạn): %,.0f đ",
-                ql.demSachDangMuon(d.getMa()), QuanLyThuVien.GIOI_HAN_MUON,
-                ql.tongTienPhatTamTinh(d.getMa())));
+
+        double tongPhat = ql.tongTienPhatTamTinh(d.getMa());
+        String tongKet = String.format("Đang mượn %d cuốn", dangMuon);
+        if (quaHan > 0) {
+            tongKet += String.format("  |  %d cuốn QUÁ HẠN  |  Tiền phạt tạm tính: %,.0f đ", quaHan, tongPhat);
+        }
+        lblTongKet.setText(tongKet);
     }
 
     private void capNhatThongTin() {
         DocGia d = ql.layDocGiaCuaTaiKhoan(taiKhoan);
         if (d == null) {
-            JOptionPane.showMessageDialog(this, "Hồ sơ độc giả không còn tồn tại");
+            JOptionPane.showMessageDialog(this, "Tài khoản chưa gắn với hồ sơ độc giả");
             return;
         }
-        JTextField txtHoTen = new JTextField(d.getTen(), 18);
-        JTextField txtSdt = new JTextField(d.getSdt() == null ? "" : d.getSdt(), 18);
-        JTextField txtEmail = new JTextField(taiKhoan.getEmail(), 18);
-        JPanel form = new JPanel(new GridLayout(0, 2, 6, 6));
-        form.add(new JLabel("Họ và tên:"));
-        form.add(txtHoTen);
-        form.add(new JLabel("Số điện thoại:"));
-        form.add(txtSdt);
-        form.add(new JLabel("Email:"));
-        form.add(txtEmail);
 
-        while (true) {
-            int kq = JOptionPane.showConfirmDialog(this, form, "Cập nhật thông tin",
-                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-            if (kq != JOptionPane.OK_OPTION) return;
-            try {
-                ql.capNhatThongTin(taiKhoan, txtHoTen.getText(), txtSdt.getText(), txtEmail.getText());
-                try {
-                    ql.luuFile();
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, "Đã cập nhật nhưng chưa lưu được vào file: " + ex.getMessage());
-                }
-                napLai();
-                khiDoiThongTin.run();
-                return;
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage());
-            }
+        JTextField txtTen = new JTextField(d.getTen(), 15);
+        JTextField txtSdt = new JTextField(d.getSdt(), 15);
+        JTextField txtEmail = new JTextField(taiKhoan.getEmail(), 15);
+
+        UIStyle.styleTextField(txtTen);
+        UIStyle.styleTextField(txtSdt);
+        UIStyle.styleTextField(txtEmail);
+
+        JPanel p = new JPanel(new GridLayout(0, 2, 8, 8));
+        p.add(new JLabel("Họ và tên:"));
+        p.add(txtTen);
+        p.add(new JLabel("Số điện thoại:"));
+        p.add(txtSdt);
+        p.add(new JLabel("Email:"));
+        p.add(txtEmail);
+
+        int kq = JOptionPane.showConfirmDialog(this, p, "Cập nhật thông tin cá nhân",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (kq != JOptionPane.OK_OPTION) return;
+
+        String ten = txtTen.getText().trim();
+        if (ten.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Họ và tên không được để trống");
+            return;
+        }
+
+        try {
+            ql.suaDocGia(d.getMa(), ten, txtSdt.getText().trim());
+            taiKhoan.setEmail(txtEmail.getText().trim());
+            napLai();
+            khiDoiThongTin.run();
+            JOptionPane.showMessageDialog(this, "Đã cập nhật thông tin thành công");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
     }
 }

@@ -36,8 +36,9 @@ public class MuonTraPanel extends JPanel {
         this.ql = ql;
         this.taiKhoan = taiKhoan;
         boolean laAdmin = taiKhoan.laAdmin();
-        setLayout(new BorderLayout(8, 8));
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        setLayout(new BorderLayout(12, 12));
+        setBackground(UIStyle.BG_MAIN);
+        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         // Hàng chọn sách + độc giả + nút Mượn
         cboSach.setRenderer(new DefaultListCellRenderer() {
@@ -63,8 +64,10 @@ public class MuonTraPanel extends JPanel {
             }
         });
         cboDocGia.setEnabled(laAdmin);
-        JButton btnMuon = new JButton("Mượn");
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        JButton btnMuon = UIStyle.createButton("Mượn sách", UIStyle.PRIMARY);
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        top.setOpaque(false);
         top.add(new JLabel("Sách:"));
         top.add(cboSach);
         top.add(new JLabel("Độc giả:"));
@@ -83,15 +86,20 @@ public class MuonTraPanel extends JPanel {
         table = new JTable(model);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoCreateRowSorter(true);
+
+        UIStyle.styleTable(table);
+        UIStyle.setBadgeRenderer(table, COT_TRANG_THAI);
+
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        JButton btnTra = new JButton("Trả");
-        JButton btnGiaHan = new JButton("Gia hạn");
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton btnTra = UIStyle.createButton("Trả sách", UIStyle.SUCCESS);
+        JButton btnGiaHan = UIStyle.createButton("Gia hạn", UIStyle.WARNING);
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
+        bottom.setOpaque(false);
         bottom.add(btnTra);
         bottom.add(btnGiaHan);
         if (laAdmin) {
-            JButton btnXuat = new JButton("Xuất CSV");
+            JButton btnXuat = UIStyle.createButton("Xuất CSV", new Color(14, 165, 233));
             bottom.add(btnXuat);
             btnXuat.addActionListener(e -> xuatCsv());
         }

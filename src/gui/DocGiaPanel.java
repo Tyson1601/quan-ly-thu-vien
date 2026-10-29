@@ -20,8 +20,9 @@ public class DocGiaPanel extends JPanel {
     /** laAdmin = false thì ẩn Thêm/Sửa/Xóa, vẫn được xem Lịch sử. */
     public DocGiaPanel(QuanLyThuVien ql, boolean laAdmin) {
         this.ql = ql;
-        setLayout(new BorderLayout(8, 8));
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        setLayout(new BorderLayout(12, 12));
+        setBackground(UIStyle.BG_MAIN);
+        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         model = new DefaultTableModel(new String[]{"Mã", "Tên", "SĐT", "Đang mượn"}, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -32,13 +33,17 @@ public class DocGiaPanel extends JPanel {
         table = new JTable(model);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoCreateRowSorter(true);
+
+        UIStyle.styleTable(table);
+
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
+        bottom.setOpaque(false);
         if (laAdmin) {
-            JButton btnThem = new JButton("Thêm");
-            JButton btnSua = new JButton("Sửa");
-            JButton btnXoa = new JButton("Xóa");
+            JButton btnThem = UIStyle.createButton("Thêm mới", UIStyle.PRIMARY);
+            JButton btnSua = UIStyle.createButton("Cập nhật", UIStyle.WARNING);
+            JButton btnXoa = UIStyle.createButton("Xóa", UIStyle.DANGER);
             bottom.add(btnThem);
             bottom.add(btnSua);
             bottom.add(btnXoa);
@@ -46,7 +51,7 @@ public class DocGiaPanel extends JPanel {
             btnSua.addActionListener(e -> sua());
             btnXoa.addActionListener(e -> xoa());
         }
-        JButton btnLichSu = new JButton("Lịch sử mượn");
+        JButton btnLichSu = UIStyle.createButton("Lịch sử mượn", new Color(14, 165, 233));
         btnLichSu.addActionListener(e -> lichSu());
         bottom.add(btnLichSu);
         add(bottom, BorderLayout.SOUTH);
@@ -96,7 +101,11 @@ public class DocGiaPanel extends JPanel {
         JTextField txtTen = new JTextField(cheDoSua ? cu.getTen() : "", 15);
         JTextField txtSdt = new JTextField(cheDoSua && cu.getSdt() != null ? cu.getSdt() : "", 15);
 
-        JPanel form = new JPanel(new GridLayout(0, 2, 6, 6));
+        UIStyle.styleTextField(txtMa);
+        UIStyle.styleTextField(txtTen);
+        UIStyle.styleTextField(txtSdt);
+
+        JPanel form = new JPanel(new GridLayout(0, 2, 8, 8));
         form.add(new JLabel("Mã:"));
         form.add(txtMa);
         form.add(new JLabel("Tên:"));
@@ -172,6 +181,9 @@ public class DocGiaPanel extends JPanel {
         }
         JTable t = new JTable(m);
         t.setAutoCreateRowSorter(true);
+        UIStyle.styleTable(t);
+        UIStyle.setBadgeRenderer(t, 5);
+
         JScrollPane sp = new JScrollPane(t);
         sp.setPreferredSize(new Dimension(680, 220));
         JOptionPane.showMessageDialog(this, sp, "Lịch sử mượn - " + ten, JOptionPane.PLAIN_MESSAGE);
