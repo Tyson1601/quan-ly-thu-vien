@@ -199,7 +199,17 @@ public class UIStyle {
         ));
     }
 
-    // 6. Khung Panel trắng bo góc (Dùng để bọc các vùng tìm kiếm hoặc bảng)
+    // 6. Hàm làm đẹp JComboBox (Đồng bộ phong cách phẳng)
+    public static void styleComboBox(JComboBox<?> cbo) {
+        cbo.setFont(FONT_BODY);
+        cbo.setBackground(Color.WHITE);
+        cbo.setForeground(TEXT_DARK);
+        cbo.setPreferredSize(new Dimension(155, 36));
+        cbo.setBorder(BorderFactory.createLineBorder(new Color(203, 213, 225), 1, true));
+        cbo.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    // 7. Khung Panel trắng bo góc (Dùng để bọc các vùng tìm kiếm hoặc bảng)
     public static JPanel createCardPanel(LayoutManager layout) {
         JPanel panel = new JPanel(layout) {
             @Override

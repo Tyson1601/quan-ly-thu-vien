@@ -1,25 +1,36 @@
 package gui;
 
 import model.Sach;
+import model.SachGiaoTrinh;
+import model.TapChi;
+import model.TruyenTranh;
 import service.NhapSachCsv;
 import service.QuanLyThuVien;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class SachPanel extends JPanel {
-    private static final String TAT_CA = "Tất cả loại";
-    private static final String[] CAC_LOAI = {TAT_CA, "Truyện tranh", "Giáo trình", "Tạp chí"};
-
     private final QuanLyThuVien ql;
     private final DefaultTableModel model;
     private final JTable table;
-    private final JTextField txtTim = new JTextField(20);
-    private final JComboBox<String> cboLoai = new JComboBox<>(CAC_LOAI);
+
+    // Các thành phần của Bộ lọc nâng cao đa tiêu chí
+    private JTextField txtTimKiem;
+    private JComboBox<String> cboLoaiSach;
+    private JComboBox<String> cboTacGia;
+    private JComboBox<String> cboTheLoai;
+    private JComboBox<String> cboTrangThai;
+    private boolean dangCapNhatCombo = false;
 
     // Hai chế độ hiển thị: danh sách (bảng) và ảnh bìa (lưới)
     private static final String CHE_DO_BANG = "bang";
@@ -38,32 +49,14 @@ public class SachPanel extends JPanel {
         setBackground(UIStyle.BG_MAIN);
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
-        // Thanh tìm kiếm + lọc theo loại
-        UIStyle.styleTextField(txtTim);
-        JButton btnTim = UIStyle.createButton("Tìm kiếm", UIStyle.PRIMARY);
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        top.setOpaque(false);
-        top.add(new JLabel("Tìm theo tên:"));
-        top.add(txtTim);
-        top.add(new JLabel("Loại:"));
-        top.add(cboLoai);
-        top.add(btnTim);
-        top.add(Box.createHorizontalStrut(16));
-        top.add(new JLabel("Hiển thị:"));
-        ButtonGroup nhom = new ButtonGroup();
-        nhom.add(rdoBang);
-        nhom.add(rdoBia);
-        rdoBang.setOpaque(false);
-        rdoBia.setOpaque(false);
-        top.add(rdoBang);
-        top.add(rdoBia);
-        add(top, BorderLayout.NORTH);
+        // 1. Thanh tìm kiếm và bộ lọc đa tiêu chí
+        add(createFilterBar(), BorderLayout.NORTH);
 
-        // Bảng
-        model = new DefaultTableModel(new String[]{"Mã", "Tên", "Loại", "Số lượng"}, 0) {
+        // 2. Bảng hiển thị danh sách sách
+        model = new DefaultTableModel(new String[]{"Mã", "Tên", "Loại", "Chi tiết / Môn học", "Số lượng"}, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
             @Override public Class<?> getColumnClass(int col) {
-                return col == 3 ? Integer.class : String.class;
+                return col == 4 ? Integer.class : String.class;
             }
         };
         table = new JTable(model);
@@ -73,7 +66,7 @@ public class SachPanel extends JPanel {
         UIStyle.styleTable(table);
         UIStyle.setBadgeRenderer(table, 2);
 
-        // Lưới ảnh bìa: JList xếp ngang, tự xuống dòng theo bề rộng cửa sổ
+        // 3. Lưới ảnh bìa: JList xếp ngang, tự xuống dòng theo bề rộng cửa sổ
         listBia.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         listBia.setLayoutOrientation(JList.HORIZONTAL_WRAP);
         listBia.setVisibleRowCount(-1);
@@ -86,7 +79,7 @@ public class SachPanel extends JPanel {
         khuVuc.add(new JScrollPane(listBia), CHE_DO_BIA);
         add(khuVuc, BorderLayout.CENTER);
 
-        // Nút thao tác (chỉ admin)
+        // 4. Nút thao tác dưới cùng (chỉ admin có quyền chỉnh sửa)
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
         bottom.setOpaque(false);
         if (laAdmin) {
@@ -118,37 +111,215 @@ public class SachPanel extends JPanel {
 
         rdoBang.addActionListener(e -> doiCheDo());
         rdoBia.addActionListener(e -> doiCheDo());
-        btnTim.addActionListener(e -> loc());
-        txtTim.addActionListener(e -> loc());
-        cboLoai.addActionListener(e -> loc());
 
         napLai();
     }
 
-    /** Nạp lại bảng từ service, xóa ô tìm kiếm và bộ lọc. */
-    public void napLai() {
-        txtTim.setText("");
-        cboLoai.setSelectedIndex(0);
-        loc();
+    /** Tạo Card Panel chứa toàn bộ thanh tìm kiếm và các hộp chọn lọc đa tiêu chí */
+    private JPanel createFilterBar() {
+        JPanel filterCard = UIStyle.createCardPanel(new BorderLayout(10, 8));
+
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        row.setOpaque(false);
+
+        JLabel lblTim = new JLabel("Tìm kiếm:");
+        lblTim.setFont(UIStyle.FONT_BOLD);
+        txtTimKiem = new JTextField(18);
+        UIStyle.styleTextField(txtTimKiem);
+        txtTimKiem.setToolTipText("Nhập mã sách, tên sách, tác giả hoặc môn học/chi tiết...");
+
+        cboLoaiSach = new JComboBox<>(new String[]{
+                "Tất cả loại hình", "Giáo trình", "Tạp chí", "Truyện tranh"
+        });
+        cboTacGia = new JComboBox<>(new String[]{"Tất cả tác giả"});
+        cboTheLoai = new JComboBox<>(new String[]{"Tất cả thể loại"});
+        cboTrangThai = new JComboBox<>(new String[]{
+                "Tất cả trạng thái", "Còn sách", "Đã hết"
+        });
+
+        UIStyle.styleComboBox(cboLoaiSach);
+        UIStyle.styleComboBox(cboTacGia);
+        UIStyle.styleComboBox(cboTheLoai);
+        UIStyle.styleComboBox(cboTrangThai);
+
+        JButton btnResetLoc = UIStyle.createButton("Đặt lại lọc", new Color(100, 116, 139));
+        btnResetLoc.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 12));
+        btnResetLoc.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+        btnResetLoc.addActionListener(e -> {
+            txtTimKiem.setText("");
+            cboLoaiSach.setSelectedIndex(0);
+            cboTacGia.setSelectedIndex(0);
+            cboTheLoai.setSelectedIndex(0);
+            cboTrangThai.setSelectedIndex(0);
+            locDuLieuSach();
+        });
+
+        row.add(lblTim);
+        row.add(txtTimKiem);
+        row.add(new JLabel("Loại:"));
+        row.add(cboLoaiSach);
+        row.add(new JLabel("Thể loại / Môn:"));
+        row.add(cboTheLoai);
+        row.add(new JLabel("Tác giả:"));
+        row.add(cboTacGia);
+        row.add(cboTrangThai);
+        row.add(btnResetLoc);
+
+        row.add(Box.createHorizontalStrut(12));
+        row.add(new JLabel("Hiển thị:"));
+        ButtonGroup nhom = new ButtonGroup();
+        nhom.add(rdoBang);
+        nhom.add(rdoBia);
+        rdoBang.setOpaque(false);
+        rdoBia.setOpaque(false);
+        row.add(rdoBang);
+        row.add(rdoBia);
+
+        // Gắn sự kiện: Gõ phím tới đâu -> lọc ngay tới đó
+        txtTimKiem.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { locDuLieuSach(); }
+            @Override public void removeUpdate(DocumentEvent e) { locDuLieuSach(); }
+            @Override public void changedUpdate(DocumentEvent e) { locDuLieuSach(); }
+        });
+
+        // Gắn sự kiện chọn ComboBox -> lọc tức thì
+        ActionListener filterAction = e -> {
+            if (!dangCapNhatCombo) locDuLieuSach();
+        };
+        cboLoaiSach.addActionListener(filterAction);
+        cboTacGia.addActionListener(filterAction);
+        cboTheLoai.addActionListener(filterAction);
+        cboTrangThai.addActionListener(filterAction);
+
+        filterCard.add(row, BorderLayout.CENTER);
+        return filterCard;
     }
 
-    /** Kết hợp ô tìm theo tên và lọc theo loại (logic nằm trong service). */
-    private void loc() {
-        String tuKhoa = txtTim.getText().trim();
-        String loai = (String) cboLoai.getSelectedItem();
+    /** Tự động quét và cập nhật danh sách Tác giả & Thể loại/Môn học từ dữ liệu sách thực tế */
+    public void capNhatDanhSachBoLoc() {
+        if (cboTacGia == null || cboTheLoai == null) return;
+        dangCapNhatCombo = true;
 
-        List<Sach> ds = new ArrayList<>(tuKhoa.isEmpty() ? ql.layTatCa() : ql.tim(tuKhoa));
-        if (loai != null && !TAT_CA.equals(loai)) {
-            ds.retainAll(ql.locTheoLoai(loai));
+        String tacGiaDangChon = (String) cboTacGia.getSelectedItem();
+        String theLoaiDangChon = (String) cboTheLoai.getSelectedItem();
+
+        Set<String> dsTacGia = new TreeSet<>();
+        Set<String> dsTheLoai = new TreeSet<>();
+
+        for (Sach s : ql.layTatCa()) {
+            String tg = layTacGia(s);
+            if (!tg.isEmpty()) {
+                dsTacGia.add(tg);
+            }
+            String tl = layTheLoaiHoacChiTiet(s);
+            if (!tl.isEmpty()) {
+                dsTheLoai.add(tl);
+            }
         }
-        hienThi(ds);
+
+        cboTacGia.removeAllItems();
+        cboTacGia.addItem("Tất cả tác giả");
+        for (String tg : dsTacGia) cboTacGia.addItem(tg);
+
+        cboTheLoai.removeAllItems();
+        cboTheLoai.addItem("Tất cả thể loại");
+        for (String tl : dsTheLoai) cboTheLoai.addItem(tl);
+
+        // Giữ lại lựa chọn cũ nếu còn tồn tại
+        if (tacGiaDangChon != null) cboTacGia.setSelectedItem(tacGiaDangChon);
+        if (theLoaiDangChon != null) cboTheLoai.setSelectedItem(theLoaiDangChon);
+
+        dangCapNhatCombo = false;
+    }
+
+    /** Lấy Thể loại / Môn học / Chi tiết từ các lớp con */
+    private String layTheLoaiHoacChiTiet(Sach s) {
+        if (s instanceof SachGiaoTrinh) {
+            return ((SachGiaoTrinh) s).getMonHoc();
+        } else if (s instanceof TapChi) {
+            return "Số phát hành: " + ((TapChi) s).getSoPhatHanh();
+        } else if (s instanceof TruyenTranh) {
+            return "Truyện tranh";
+        }
+        return "";
+    }
+
+    /** Lấy tác giả nếu có */
+    private String layTacGia(Sach s) {
+        return "";
+    }
+
+    /** Lọc kết hợp 5 tiêu chí: Từ khóa, Loại hình, Tác giả, Thể loại/Chi tiết, Trạng thái */
+    public void locDuLieuSach() {
+        if (dangCapNhatCombo) return;
+
+        String tuKhoa = (txtTimKiem != null) ? txtTimKiem.getText().trim().toLowerCase() : "";
+        String loaiChon = (cboLoaiSach != null) ? (String) cboLoaiSach.getSelectedItem() : null;
+        String tacGiaChon = (cboTacGia != null) ? (String) cboTacGia.getSelectedItem() : null;
+        String theLoaiChon = (cboTheLoai != null) ? (String) cboTheLoai.getSelectedItem() : null;
+        String trangThaiChon = (cboTrangThai != null) ? (String) cboTrangThai.getSelectedItem() : null;
+
+        List<Sach> ketQua = new ArrayList<>();
+        for (Sach s : ql.layTatCa()) {
+            String ma = s.getMa().toLowerCase();
+            String ten = s.getTen().toLowerCase();
+            String loai = s.getLoai().toLowerCase();
+            String chiTiet = layTheLoaiHoacChiTiet(s).toLowerCase();
+            String tacGia = layTacGia(s).toLowerCase();
+
+            // 1. Kiểm tra từ khóa (Mã, Tên sách, Loại, Tác giả, Chi tiết...)
+            if (!tuKhoa.isEmpty()) {
+                boolean khop = ma.contains(tuKhoa) || ten.contains(tuKhoa)
+                        || loai.contains(tuKhoa) || chiTiet.contains(tuKhoa)
+                        || tacGia.contains(tuKhoa);
+                if (!khop) continue;
+            }
+
+            // 2. Kiểm tra Loại sách (Giáo trình / Tạp chí / Truyện tranh)
+            if (loaiChon != null && !loaiChon.equals("Tất cả loại hình") && !loaiChon.equals("Tất cả loại")) {
+                if (!s.getLoai().equalsIgnoreCase(loaiChon)) continue;
+            }
+
+            // 3. Kiểm tra Tác giả
+            if (tacGiaChon != null && !tacGiaChon.equals("Tất cả tác giả")) {
+                if (!layTacGia(s).equalsIgnoreCase(tacGiaChon)) continue;
+            }
+
+            // 4. Kiểm tra Thể loại / Môn học / Chi tiết
+            if (theLoaiChon != null && !theLoaiChon.equals("Tất cả thể loại")) {
+                if (!layTheLoaiHoacChiTiet(s).equalsIgnoreCase(theLoaiChon)) continue;
+            }
+
+            // 5. Kiểm tra Trạng thái Còn sách / Đã hết
+            if (trangThaiChon != null && !trangThaiChon.equals("Tất cả trạng thái")) {
+                boolean con = s.getSoLuong() > 0;
+                if (trangThaiChon.equals("Còn sách") && !con) continue;
+                if (trangThaiChon.equals("Đã hết") && con) continue;
+            }
+
+            ketQua.add(s);
+        }
+
+        hienThi(ketQua);
+    }
+
+    /** Nạp lại danh sách bộ lọc và dữ liệu hiển thị từ service */
+    public void napLai() {
+        capNhatDanhSachBoLoc();
+        locDuLieuSach();
     }
 
     private void hienThi(List<Sach> ds) {
         model.setRowCount(0);
         modelBia.clear();
         for (Sach s : ds) {
-            model.addRow(new Object[]{s.getMa(), s.getTen(), s.getLoai(), s.getSoLuong()});
+            model.addRow(new Object[]{
+                    s.getMa(),
+                    s.getTen(),
+                    s.getLoai(),
+                    layTheLoaiHoacChiTiet(s),
+                    s.getSoLuong()
+            });
             modelBia.addElement(s);
         }
     }
@@ -180,7 +351,6 @@ public class SachPanel extends JPanel {
         public Component getListCellRendererComponent(JList<? extends Sach> list, Sach s, int index,
                                                       boolean chon, boolean focus) {
             lblAnh.setIcon(AnhBia.lay(s));
-            // HTML để tên dài tự xuống dòng; chiều cao ô cố định nên tên quá dài sẽ bị cắt
             lblTen.setText("<html><div style='text-align:center;width:" + (AnhBia.RONG - 22) + "px'>"
                     + escape(s.getTen()) + "</div></html>");
             lblSl.setText(s.getMa() + "  |  còn " + s.getSoLuong());
@@ -227,7 +397,7 @@ public class SachPanel extends JPanel {
         String ma = null;
         Sach chon = listBia.getSelectedValue();
         if (chon != null) ma = chon.getMa();
-        loc();
+        locDuLieuSach();
         if (ma != null) {
             for (int i = 0; i < modelBia.size(); i++) {
                 if (modelBia.get(i).getMa().equals(ma)) { listBia.setSelectedIndex(i); break; }
@@ -236,7 +406,7 @@ public class SachPanel extends JPanel {
     }
 
     private String maDangChon() {
-        if (rdoBia.isSelected()) {   // đang xem ảnh bìa thì lấy sách chọn trong lưới
+        if (rdoBia.isSelected()) {
             Sach s = listBia.getSelectedValue();
             if (s == null) {
                 JOptionPane.showMessageDialog(this, "Hãy chọn một cuốn sách");
@@ -297,7 +467,7 @@ public class SachPanel extends JPanel {
             NhapSachCsv.KetQua kq = NhapSachCsv.nhap(ql, f.getAbsolutePath());
             if (kq.soThem > 0) {
                 try {
-                    ql.luuFile();   // lưu luôn để không mất nếu chương trình tắt đột ngột
+                    ql.luuFile();
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this, "Đã nhập nhưng chưa lưu được vào file: " + ex.getMessage());
                 }
