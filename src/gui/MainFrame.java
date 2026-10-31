@@ -48,12 +48,11 @@ public class MainFrame extends JFrame {
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBackground(UIStyle.BG_SIDEBAR);
         sidebar.setPreferredSize(new Dimension(240, getHeight()));
+        sidebar.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 2, Color.BLACK));
 
         // Logo / Tên ứng dụng ở góc trên Sidebar
-        JLabel lblLogo = new JLabel("THƯ VIỆN SỐ");
-        lblLogo.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 20));
-        lblLogo.setForeground(Color.WHITE);
-        lblLogo.setBorder(new EmptyBorder(25, 24, 25, 24));
+        JComponent lblLogo = UIStyle.createLogo("THƯ VIỆN SỐ");   // chữ khối kiểu logo Minecraft
+        lblLogo.setBorder(new EmptyBorder(22, 16, 22, 16));
         lblLogo.setAlignmentX(Component.LEFT_ALIGNMENT);
         sidebar.add(lblLogo);
 
@@ -125,9 +124,9 @@ public class MainFrame extends JFrame {
 
         // Header TopBar
         JPanel topBar = new JPanel(new BorderLayout());
-        topBar.setBackground(Color.WHITE);
+        topBar.setBackground(UIStyle.BG_SIDEBAR);   // thanh trên cùng bằng đá
         topBar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(226, 232, 240)),
+                BorderFactory.createMatteBorder(0, 0, 2, 0, Color.BLACK),
                 new EmptyBorder(12, 20, 12, 20)
         ));
 
@@ -161,7 +160,7 @@ public class MainFrame extends JFrame {
         Runnable resetNav = () -> {
             for (JButton b : navButtons) {
                 b.setBackground(UIStyle.BG_SIDEBAR);
-                b.setForeground(new Color(203, 213, 225));
+                b.setForeground(UIStyle.TEXT_DARK);
             }
         };
 

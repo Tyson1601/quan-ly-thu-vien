@@ -1,5 +1,6 @@
 import gui.DangNhapDialog;
 import gui.MainFrame;
+import gui.MinecraftTheme;
 import gui.UIStyle;
 import model.TaiKhoan;
 import service.DuLieuMau;
@@ -7,7 +8,6 @@ import service.QuanLyThuVien;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import java.io.File;
 
 public class Main {
@@ -16,13 +16,11 @@ public class Main {
         System.setProperty("awt.useSystemAAFontSettings", "lcd_hrgb");
         System.setProperty("swing.aatext", "true");
 
-        // 2. Kích hoạt giao diện hệ thống trước khi mở MainFrame
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {}
-
-        // 3. Tải font ngoài nếu có
+        // 2. Tải font ngoài nếu có
         UIStyle.loadCustomFont();
+
+        // 3. Bật giao diện kiểu Minecraft (phải gọi trước khi tạo bất kỳ cửa sổ nào)
+        MinecraftTheme.apply();
 
         SwingUtilities.invokeLater(() -> {
             QuanLyThuVien ql = new QuanLyThuVien();   // duy nhất một đối tượng cho cả chương trình

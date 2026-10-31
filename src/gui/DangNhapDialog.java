@@ -8,7 +8,7 @@ import java.awt.*;
 
 /** Màn hình đăng nhập. hienThi() trả về TaiKhoan đã đăng nhập (hoặc vừa đăng ký), null nếu đóng cửa sổ. */
 public class DangNhapDialog extends JDialog {
-    static final Color XANH = new Color(24, 119, 242);
+    static final Color XANH = UIStyle.PRIMARY;
 
     private final QuanLyThuVien ql;
     private final JTextField txtTen = new JTextField();
@@ -21,11 +21,8 @@ public class DangNhapDialog extends JDialog {
         this.ql = ql;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        JLabel tieuDe = new JLabel("Thư viện");
-        tieuDe.setFont(tieuDe.getFont().deriveFont(Font.BOLD, 30f));
-        tieuDe.setForeground(XANH);
         JLabel phu = new JLabel("Đăng nhập để mượn và quản lý sách");
-        phu.setForeground(Color.GRAY);
+        phu.setForeground(UIStyle.TEXT_MUTED);
 
         txtTen.setPreferredSize(new Dimension(280, 32));
         txtMatKhau.setPreferredSize(new Dimension(280, 32));
@@ -33,7 +30,7 @@ public class DangNhapDialog extends JDialog {
         JCheckBox chkHien = new JCheckBox("Hiện mật khẩu");
         chkHien.addActionListener(e -> txtMatKhau.setEchoChar(chkHien.isSelected() ? (char) 0 : kyTuAn));
 
-        lblLoi.setForeground(new Color(200, 30, 30));
+        lblLoi.setForeground(UIStyle.DANGER);
 
         JButton btnDangNhap = new JButton("Đăng nhập");
         btnDangNhap.setBackground(XANH);
@@ -49,7 +46,7 @@ public class DangNhapDialog extends JDialog {
         JPanel nen = new JPanel(new GridBagLayout());
         nen.setBorder(BorderFactory.createEmptyBorder(24, 32, 24, 32));
         int y = 0;
-        them(nen, tieuDe, y++, 0);
+        them(nen, UIStyle.createLogo("Thư viện"), y++, 0);
         them(nen, phu, y++, 2);
         them(nen, new JLabel("Tên đăng nhập"), y++, 18);
         them(nen, txtTen, y++, 4);
