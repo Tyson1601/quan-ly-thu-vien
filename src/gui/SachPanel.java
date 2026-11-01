@@ -71,7 +71,7 @@ public class SachPanel extends JPanel {
         listBia.setLayoutOrientation(JList.HORIZONTAL_WRAP);
         listBia.setVisibleRowCount(-1);
         listBia.setFixedCellWidth(AnhBia.RONG + 30);
-        listBia.setFixedCellHeight(AnhBia.CAO + 66);
+        listBia.setFixedCellHeight(AnhBia.CAO + 88);   // chừa chỗ cho tên 3 dòng (chữ đơn cách rộng hơn)
         listBia.setCellRenderer(new BiaRenderer());
 
         khuVuc.setOpaque(false);
@@ -119,8 +119,11 @@ public class SachPanel extends JPanel {
     private JPanel createFilterBar() {
         JPanel filterCard = UIStyle.createCardPanel(new BorderLayout(10, 8));
 
+        // Chia 2 hàng: một hàng quá dài sẽ bị cắt mất các ô cuối khi cửa sổ không đủ rộng
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         row.setOpaque(false);
+        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        row2.setOpaque(false);
 
         JLabel lblTim = new JLabel("Tìm kiếm:");
         lblTim.setFont(UIStyle.FONT_BOLD);
@@ -160,20 +163,20 @@ public class SachPanel extends JPanel {
         row.add(cboLoaiSach);
         row.add(new JLabel("Thể loại / Môn:"));
         row.add(cboTheLoai);
-        row.add(new JLabel("Tác giả:"));
-        row.add(cboTacGia);
-        row.add(cboTrangThai);
-        row.add(btnResetLoc);
+        row2.add(new JLabel("Tác giả:"));
+        row2.add(cboTacGia);
+        row2.add(cboTrangThai);
+        row2.add(btnResetLoc);
 
-        row.add(Box.createHorizontalStrut(12));
-        row.add(new JLabel("Hiển thị:"));
+        row2.add(Box.createHorizontalStrut(12));
+        row2.add(new JLabel("Hiển thị:"));
         ButtonGroup nhom = new ButtonGroup();
         nhom.add(rdoBang);
         nhom.add(rdoBia);
         rdoBang.setOpaque(false);
         rdoBia.setOpaque(false);
-        row.add(rdoBang);
-        row.add(rdoBia);
+        row2.add(rdoBang);
+        row2.add(rdoBia);
 
         // Gắn sự kiện: Gõ phím tới đâu -> lọc ngay tới đó
         txtTimKiem.getDocument().addDocumentListener(new DocumentListener() {
@@ -191,7 +194,12 @@ public class SachPanel extends JPanel {
         cboTheLoai.addActionListener(filterAction);
         cboTrangThai.addActionListener(filterAction);
 
-        filterCard.add(row, BorderLayout.CENTER);
+        JPanel cacHang = new JPanel();
+        cacHang.setLayout(new BoxLayout(cacHang, BoxLayout.Y_AXIS));
+        cacHang.setOpaque(false);
+        cacHang.add(row);
+        cacHang.add(row2);
+        filterCard.add(cacHang, BorderLayout.CENTER);
         return filterCard;
     }
 
@@ -339,6 +347,7 @@ public class SachPanel extends JPanel {
             setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
             lblAnh.setHorizontalAlignment(SwingConstants.CENTER);
             lblSl.setFont(lblSl.getFont().deriveFont(Font.PLAIN, 11f));
+            lblTen.setFont(lblTen.getFont().deriveFont(Font.PLAIN, 12f));
             JPanel chu = new JPanel(new BorderLayout());
             chu.setOpaque(false);
             chu.add(lblTen, BorderLayout.CENTER);
@@ -354,7 +363,7 @@ public class SachPanel extends JPanel {
             lblTen.setText("<html><div style='text-align:center;width:" + (AnhBia.RONG - 22) + "px'>"
                     + escape(s.getTen()) + "</div></html>");
             lblSl.setText(s.getMa() + "  |  còn " + s.getSoLuong());
-            lblSl.setForeground(s.getSoLuong() <= 0 ? new Color(176, 0, 32) : Color.GRAY);
+            lblSl.setForeground(s.getSoLuong() <= 0 ? UIStyle.DANGER : UIStyle.TEXT_MUTED);
             setBackground(chon ? list.getSelectionBackground() : list.getBackground());
             lblTen.setForeground(chon ? list.getSelectionForeground() : list.getForeground());
             setOpaque(true);

@@ -162,8 +162,7 @@ public class ThongKePanel extends JPanel {
 
                     // Vẽ cột bo góc
                     if (barHeight > 0) {
-                        g2.setColor(colors[i]);
-                        g2.fillRoundRect(x, y, barWidth, barHeight, 10, 10);
+                        MinecraftTheme.veKhoiNoi(g2, x, y, barWidth, barHeight, colors[i], false);
                     }
 
                     // Vẽ con số trên đỉnh cột
@@ -221,14 +220,12 @@ public class ThongKePanel extends JPanel {
                     g2.drawString(labels[i] + " (" + values[i] + " phiếu - " + percent + "%)", 10, y);
 
                     // Khung nền xám
-                    g2.setColor(new Color(226, 232, 240));
-                    g2.fillRoundRect(10, y + 10, w, 20, 10, 10);
+                    MinecraftTheme.veKhoiNoi(g2, 10, y + 10, w, 20, new Color(0x101010), true);
 
                     // Thanh màu tỷ lệ
                     int fillW = values[i] == 0 ? 0 : Math.max(10, (int) ((values[i] * 1.0 / total) * w));
                     if (fillW > 0) {
-                        g2.setColor(colors[i]);
-                        g2.fillRoundRect(10, y + 10, fillW, 20, 10, 10);
+                        MinecraftTheme.veKhoiNoi(g2, 10, y + 10, fillW, 20, colors[i], false);
                     }
                 }
                 g2.dispose();

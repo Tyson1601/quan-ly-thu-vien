@@ -27,7 +27,7 @@ public class DangKyDialog extends JDialog {
         tieuDe.setFont(tieuDe.getFont().deriveFont(Font.BOLD, 24f));
         tieuDe.setForeground(DangNhapDialog.XANH);
         JLabel phu = new JLabel("Mỗi tài khoản có hồ sơ độc giả riêng để mượn sách");
-        phu.setForeground(Color.GRAY);
+        phu.setForeground(UIStyle.TEXT_MUTED);
 
         char kyTuAn = txtMk1.getEchoChar();
         JCheckBox chkHien = new JCheckBox("Hiện mật khẩu");
@@ -36,7 +36,7 @@ public class DangKyDialog extends JDialog {
             txtMk1.setEchoChar(c);
             txtMk2.setEchoChar(c);
         });
-        lblLoi.setForeground(new Color(200, 30, 30));
+        lblLoi.setForeground(UIStyle.DANGER);
 
         JButton btnDangKy = new JButton("Đăng ký");
         btnDangKy.setBackground(DangNhapDialog.XANH);
