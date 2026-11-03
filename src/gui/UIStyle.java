@@ -28,7 +28,7 @@ public class UIStyle {
 
     // ===== Màu chữ (tên cũ giữ nguyên: TEXT_DARK = chữ chính, nay là chữ trắng trên nền tối) =====
     public static final Color TEXT_DARK = new Color(0xFFFFFF);
-    public static final Color TEXT_MUTED = new Color(0xAAAAAA);
+    public static final Color TEXT_MUTED = new Color(0xBDBDBD);
 
     // Màu riêng của bảng
     private static final Color HANG_A = new Color(0x1B1B1B);
@@ -36,18 +36,37 @@ public class UIStyle {
     private static final Color HANG_CHON = new Color(0x4D4D4D);
     private static final Color CHU_CHON = new Color(0xFFFF55);
 
-    // Phông chữ: ưu tiên phông đơn cách (monospace) cho gần chữ khối của game
-    public static final String FONT_FAMILY = chonFontTotNhat();
+    // Phông chữ: chữ nội dung dùng phông không chân, rõ nét (Segoe UI trên Windows);
+    // phông đơn cách kiểu "khối" chỉ dùng cho logo để giữ không khí Minecraft.
+    public static final String FONT_FAMILY = chonFontDocDuoc();
+    public static final String FONT_MONO = chonFontTotNhat();
 
-    public static final Font FONT_TITLE    = new Font(FONT_FAMILY, Font.BOLD, 22);
-    public static final Font FONT_SUBTITLE = new Font(FONT_FAMILY, Font.BOLD, 15);
-    public static final Font FONT_BODY     = new Font(FONT_FAMILY, Font.PLAIN, 14);
-    public static final Font FONT_BOLD     = new Font(FONT_FAMILY, Font.BOLD, 14);
+    public static final Font FONT_TITLE    = new Font(FONT_FAMILY, Font.BOLD, 24);
+    public static final Font FONT_SUBTITLE = new Font(FONT_FAMILY, Font.BOLD, 16);
+    public static final Font FONT_BODY     = new Font(FONT_FAMILY, Font.PLAIN, 15);
+    public static final Font FONT_BOLD     = new Font(FONT_FAMILY, Font.BOLD, 15);
 
     /** Toàn bộ chữ cái tiếng Việt có dấu: font nào không hiển thị được hết thì bị loại. */
     private static final String CHU_VIET =
             "àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ"
           + "ÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ";
+
+    /** Phông không chân dễ đọc, bắt buộc hiển thị đủ dấu tiếng Việt; không có thì dùng SansSerif (Java tự mượn glyph thiếu). */
+    private static String chonFontDocDuoc() {
+        String[] uuTien = {"Segoe UI", "Tahoma", "Arial", "DejaVu Sans"};
+        String[] fontMayTinh = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getAvailableFontFamilyNames();
+        for (String f : uuTien) {
+            for (String sysFont : fontMayTinh) {
+                if (sysFont.equalsIgnoreCase(f)
+                        && new Font(sysFont, Font.PLAIN, 14).canDisplayUpTo(CHU_VIET) == -1
+                        && new Font(sysFont, Font.BOLD, 14).canDisplayUpTo(CHU_VIET) == -1) {
+                    return sysFont;
+                }
+            }
+        }
+        return Font.SANS_SERIF;
+    }
 
     private static String chonFontTotNhat() {
         // Ưu tiên phông đơn cách (gần chữ khối của game) NHƯNG phải đủ dấu tiếng Việt.

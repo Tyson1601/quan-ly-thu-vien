@@ -107,7 +107,7 @@ public final class McUI {
     }
 
     // ------------------------------------------------------------------ NHÃN
-    /** Nhãn có bóng đổ như chữ trong game (chỉ áp dụng cho chữ thường, không áp dụng cho nhãn HTML). */
+    /** Nhãn có bóng đổ như chữ trong game (chỉ cho chữ đậm hoặc lớn; không áp dụng cho nhãn HTML). */
     public static class McLabelUI extends BasicLabelUI {
         private static final McLabelUI INSTANCE = new McLabelUI();
 
@@ -116,8 +116,11 @@ public final class McUI {
         @Override
         protected void paintEnabledText(JLabel l, Graphics g, String s, int textX, int textY) {
             Color mau = l.getForeground();
-            g.setColor(new Color(mau.getRed() / 4, mau.getGreen() / 4, mau.getBlue() / 4));
-            BasicGraphicsUtils.drawStringUnderlineCharAt(g, s, -1, textX + 1, textY + 1);
+            Font f = l.getFont();
+            if (f.isBold() || f.getSize() >= 18) {   // chữ nhỏ thường không đổ bóng để giữ nét rõ
+                g.setColor(new Color(mau.getRed() / 4, mau.getGreen() / 4, mau.getBlue() / 4));
+                BasicGraphicsUtils.drawStringUnderlineCharAt(g, s, -1, textX + 1, textY + 1);
+            }
             g.setColor(mau);
             BasicGraphicsUtils.drawStringUnderlineCharAt(g, s, l.getDisplayedMnemonicIndex(), textX, textY);
         }

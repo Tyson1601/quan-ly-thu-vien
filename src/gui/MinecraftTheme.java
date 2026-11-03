@@ -130,7 +130,7 @@ public final class MinecraftTheme {
 
         Logo(String chu, int coChu) {
             this.chu = chu;
-            this.font = new Font(UIStyle.FONT_FAMILY, Font.BOLD, coChu);
+            this.font = new Font(UIStyle.FONT_MONO, Font.BOLD, coChu);
             setOpaque(false);
         }
 
