@@ -119,11 +119,13 @@ public class SachPanel extends JPanel {
     private JPanel createFilterBar() {
         JPanel filterCard = UIStyle.createCardPanel(new BorderLayout(10, 8));
 
-        // Chia 2 hàng: một hàng quá dài sẽ bị cắt mất các ô cuối khi cửa sổ không đủ rộng
+        // Chia 3 hàng: một hàng quá dài sẽ bị cắt mất các ô cuối khi cửa sổ không đủ rộng
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         row.setOpaque(false);
         JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         row2.setOpaque(false);
+        JPanel row3 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        row3.setOpaque(false);
 
         JLabel lblTim = new JLabel("Tìm kiếm:");
         lblTim.setFont(UIStyle.FONT_BOLD);
@@ -146,7 +148,7 @@ public class SachPanel extends JPanel {
         UIStyle.styleComboBox(cboTrangThai);
 
         JButton btnResetLoc = UIStyle.createButton("Đặt lại lọc", new Color(100, 116, 139));
-        btnResetLoc.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 12));
+        btnResetLoc.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 13));
         btnResetLoc.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
         btnResetLoc.addActionListener(e -> {
             txtTimKiem.setText("");
@@ -161,22 +163,22 @@ public class SachPanel extends JPanel {
         row.add(txtTimKiem);
         row.add(new JLabel("Loại:"));
         row.add(cboLoaiSach);
-        row.add(new JLabel("Thể loại / Môn:"));
-        row.add(cboTheLoai);
+        row2.add(new JLabel("Thể loại / Môn:"));
+        row2.add(cboTheLoai);
         row2.add(new JLabel("Tác giả:"));
         row2.add(cboTacGia);
         row2.add(cboTrangThai);
-        row2.add(btnResetLoc);
+        row3.add(btnResetLoc);
 
-        row2.add(Box.createHorizontalStrut(12));
-        row2.add(new JLabel("Hiển thị:"));
+        row3.add(Box.createHorizontalStrut(12));
+        row3.add(new JLabel("Hiển thị:"));
         ButtonGroup nhom = new ButtonGroup();
         nhom.add(rdoBang);
         nhom.add(rdoBia);
         rdoBang.setOpaque(false);
         rdoBia.setOpaque(false);
-        row2.add(rdoBang);
-        row2.add(rdoBia);
+        row3.add(rdoBang);
+        row3.add(rdoBia);
 
         // Gắn sự kiện: Gõ phím tới đâu -> lọc ngay tới đó
         txtTimKiem.getDocument().addDocumentListener(new DocumentListener() {
@@ -199,6 +201,7 @@ public class SachPanel extends JPanel {
         cacHang.setOpaque(false);
         cacHang.add(row);
         cacHang.add(row2);
+        cacHang.add(row3);
         filterCard.add(cacHang, BorderLayout.CENTER);
         return filterCard;
     }
@@ -346,8 +349,8 @@ public class SachPanel extends JPanel {
             super(new BorderLayout(0, 4));
             setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
             lblAnh.setHorizontalAlignment(SwingConstants.CENTER);
-            lblSl.setFont(lblSl.getFont().deriveFont(Font.PLAIN, 11f));
-            lblTen.setFont(lblTen.getFont().deriveFont(Font.PLAIN, 12f));
+            lblSl.setFont(lblSl.getFont().deriveFont(Font.PLAIN, 12f));
+            lblTen.setFont(lblTen.getFont().deriveFont(Font.PLAIN, 13f));
             JPanel chu = new JPanel(new BorderLayout());
             chu.setOpaque(false);
             chu.add(lblTen, BorderLayout.CENTER);

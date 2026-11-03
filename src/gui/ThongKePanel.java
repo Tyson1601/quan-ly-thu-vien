@@ -113,7 +113,7 @@ public class ThongKePanel extends JPanel {
         content.setBorder(new EmptyBorder(0, 12, 0, 0));
 
         JLabel lblTitle = new JLabel(title);
-        lblTitle.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 12));
+        lblTitle.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 13));
         lblTitle.setForeground(UIStyle.TEXT_MUTED);
 
         valueLabel.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 30));

@@ -144,8 +144,8 @@ public class MainFrame extends JFrame {
 
         JButton btnDoiMatKhau = UIStyle.createButton("Đổi mật khẩu", new Color(100, 116, 139));
         JButton btnDangXuat = UIStyle.createButton("Đăng xuất", UIStyle.DANGER);
-        btnDoiMatKhau.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 12));
-        btnDangXuat.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 12));
+        btnDoiMatKhau.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 13));
+        btnDangXuat.setFont(new Font(UIStyle.FONT_FAMILY, Font.BOLD, 13));
         btnDoiMatKhau.setBorder(new EmptyBorder(6, 14, 6, 14));
         btnDangXuat.setBorder(new EmptyBorder(6, 14, 6, 14));
 
